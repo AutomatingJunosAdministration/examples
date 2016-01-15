@@ -105,7 +105,7 @@ def main():
     return rc
 
 
-def get_lldp_neighbors(device=None, user=None, pw=None):
+def get_lldp_neighbors(device, user, pw):
     """Get current LLDP neighbor information.
 
     Return a two-level dictionary with the LLDP neighbor information..
@@ -150,7 +150,7 @@ def get_lldp_neighbors(device=None, user=None, pw=None):
     return lldp_info
 
 
-def get_description_info_for_interfaces(device=None, user=None, pw=None):
+def get_description_info_for_interfaces(device, user, pw):
     """Get current interface description for each interface.
 
     Parse the description into the user-configured description, remote
@@ -315,7 +315,7 @@ def build_config_changes(desc_changes):
     return jxmlease.XMLDictNode(config)
 
 
-def load_merge_xml_config(device=None, user=None, pw=None, config=None):
+def load_merge_xml_config(device, user, pw, config):
     """Load a configuration using "configure private" and "load merge".
 
     Given a configuration snippet as a jxmlease.XMLDictNode, do:
@@ -369,7 +369,7 @@ def load_merge_xml_config(device=None, user=None, pw=None, config=None):
     return rc
 
 
-def parse_multipart_messages(type=None, response=None):
+def parse_multipart_messages(type, response):
     """Parse the response from a multi-RPC API call.
 
     Parse the response from a multi-RPC API call into a list of the

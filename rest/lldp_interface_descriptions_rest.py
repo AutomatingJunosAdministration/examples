@@ -60,47 +60,49 @@ def main():
     user = raw_input('Device Username: ')
     password = getpass.getpass('Device Password: ')
 
-    for device in sys.argv[1:]:
-        print("Getting LLDP information from %s..." % device)
-        lldp_info = get_lldp_neighbors(device=device, user=user, pw=password)
+    for hostname in sys.argv[1:]:
+        print("Getting LLDP information from %s..." % hostname)
+        lldp_info = get_lldp_neighbors(device=hostname, user=user, pw=password)
         if not lldp_info:
             if lldp_info == None:
-                print("    Error retrieving LLDP info on " + device +
+                print("    Error retrieving LLDP info on " + hostname +
                       ". Make sure LLDP is enabled.")
             else:
-                print("    No LLDP neighbors on " + device +
-                      "Make sure LLDP is enabled." % device)
+                print("    No LLDP neighbors on " + hostname +
+                      ". Make sure LLDP is enabled.")
             rc = 1
             continue
 
-        print("Getting interface descriptions from %s..." % device)
-        desc_info = get_description_info_for_interfaces(device=device,
+        print("Getting interface descriptions from %s..." % hostname)
+        desc_info = get_description_info_for_interfaces(device=hostname,
                                                         user=user,
                                                         pw=password)
         if desc_info == None:
-            print("    Error retrieving interface descriptions on %s." % device)
+            print("    Error retrieving interface descriptions on %s." %
+                  hostname)
             rc = 1
             continue
 
         desc_changes = check_lldp_changes(lldp_info, desc_info)
         if not desc_changes:
-            print("    No LLDP changes to configure on %s." % device)
+            print("    No LLDP changes to configure on %s." % hostname)
             continue
 
         config = build_config_changes(desc_changes)
         if config == None:
-            print("    Error generating configuration changes for %s." % device)
+            print("    Error generating configuration changes for %s." %
+                  hostname)
             rc = 1
             continue
 
-        if load_merge_xml_config(device=device,
+        if load_merge_xml_config(device=hostname,
                                  user=user,
                                  pw=password,
                                  config=config):
             print("    Sucessfully committed configuration changes on %s." %
-                  device)
+                  hostname)
         else:
-            print("    Error committing description changes on %s." % device)
+            print("    Error committing description changes on %s." % hostname)
             rc = 1
     return rc
 

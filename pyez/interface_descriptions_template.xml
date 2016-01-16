@@ -1,0 +1,10 @@
+<configuration>
+    <interfaces>
+    {% for key, value in descriptions.iteritems() %}
+        <interface>
+            <name>{{ key }}</name>
+            <description>{{ value }}</description>
+        </interface>
+    {% endfor %}
+    </interfaces>
+</configuration>

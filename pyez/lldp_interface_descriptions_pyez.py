@@ -69,14 +69,10 @@ def main():
 
             print("Getting LLDP information from %s..." % hostname)
             lldp_info = get_lldp_neighbors(device=dev)
-            if not lldp_info:
-                if lldp_info == None:
-                    print("    Error retrieving LLDP info on " + hostname +
-                          ". Make sure LLDP is enabled.")
-                    rc = 1
-                else:
-                    print("    No LLDP neighbors on " + hostname +
-                          ". Make sure LLDP is enabled.")
+            if lldp_info == None:
+                print("    Error retrieving LLDP info on " + hostname +
+                      ". Make sure LLDP is enabled.")
+                rc = 1
                 raise DoneWithDevice
 
             print("Getting interface descriptions from %s..." % hostname)

@@ -158,13 +158,13 @@ def get_description_info_for_interfaces(device, user, pw):
     """Get current interface description for each interface.
 
     Parse the description into the user-configured description, remote
-    system and remote port components.
+    system, and remote port components.
 
     Return a two-level dictionary. The first-level key is the
     local port (aka interface) name. The second-level keys are
     'user_desc' for the user-configured description, 'system' for the
-    remote system name, 'port' for the remote port, and 'down' which is
-    a boolean indicating if LLDP was previously down. On error, return None.
+    remote system name, 'port' for the remote port, and 'down', which is
+    a Boolean indicating if LLDP was previously down. On error, return None.
 
     For example:
     {'ge-0/0/1': {'user_desc': 'test description', 'system': 'r1',

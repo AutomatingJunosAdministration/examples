@@ -62,7 +62,9 @@ def main():
 
     for hostname in sys.argv[1:]:
         print("Getting LLDP information from %s..." % hostname)
-        lldp_info = get_lldp_neighbors(device=hostname, user=user, pw=password)
+        lldp_info = get_lldp_neighbors(device=hostname,
+                                       user=user,
+                                       pw=password)
         if not lldp_info:
             if lldp_info == None:
                 print("    Error retrieving LLDP info on " + hostname +

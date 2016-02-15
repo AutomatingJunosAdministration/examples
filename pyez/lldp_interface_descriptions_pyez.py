@@ -92,7 +92,7 @@ def main():
                 device=dev,
                 template_path=TEMPLATE_PATH,
                 template_vars={'descriptions': desc_changes}):
-                print("    Sucessfully committed configuration changes on %s." %
+                print("    Successfully committed configuration changes on %s." %
                       hostname)
             else:
                 print("    Error committing description changes on %s." %

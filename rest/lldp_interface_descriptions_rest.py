@@ -99,7 +99,7 @@ def main():
                                  user=user,
                                  pw=password,
                                  config=config):
-            print("    Sucessfully committed configuration changes on %s." %
+            print("    Successfully committed configuration changes on %s." %
                   hostname)
         else:
             print("    Error committing description changes on %s." % hostname)

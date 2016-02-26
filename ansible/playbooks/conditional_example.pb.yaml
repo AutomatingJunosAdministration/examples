@@ -5,10 +5,8 @@
   gather_facts: no
   tasks:
     - name: Execute Some Command
-      command: /bin/false
+      command: /bin/true
       register: result
-      changed_when: result|failed
-      ignore_errors: True
       when: inventory_hostname == "core1.site1"
     - name: Print success
       debug:

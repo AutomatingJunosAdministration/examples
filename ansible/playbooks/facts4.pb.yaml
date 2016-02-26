@@ -5,15 +5,19 @@
   gather_facts: no
   roles:
     - Juniper.junos
+  vars_prompt:
+    - name: netconf_user
+      prompt: Username
+      private: no
+    - name: netconf_password
+      prompt: Password
+      private: yes
   vars:
     default_port: 830
-    default_user: user
-  vars_files:
-    - private_vars.yaml
   tasks:
     - name: Get Junos Facts
       junos_get_facts:
         host: "{{ inventory_hostname }}"
-        user: "{{ netconf_user | default(default_user) }}"
+        user: "{{ netconf_user }}"
         port: "{{ default_port }}"
-        passwd: "{{ netconf_password | default(default_password) }}"
+        passwd: "{{ netconf_password }}"

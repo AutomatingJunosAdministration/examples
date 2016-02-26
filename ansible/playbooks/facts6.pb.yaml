@@ -1,0 +1,33 @@
+---
+- name: Get facts from core1.site1 Junos router
+  hosts: core1.site1
+  connection: local
+  gather_facts: no
+  roles:
+    - Juniper.junos
+  vars_prompt:
+    - name: netconf_user
+      prompt: Username
+      private: no
+    - name: netconf_password
+      prompt: Password
+      private: yes
+  vars:
+    default_port: 830
+  tasks:
+    - name: Get Junos Facts
+      junos_get_facts:
+        host: "{{ inventory_hostname }}"
+        user: "{{ netconf_user }}"
+        port: "{{ default_port }}"
+        passwd: "{{ netconf_password }}"
+      register: junos_facts_result
+    - name: Print Junos Facts Result
+      debug:
+        var: junos_facts_result
+    - name: Print Junos HOME Dir
+      debug:
+        var: junos_facts_result.facts.HOME
+    - name: Print value of default_port
+      debug:
+        var: default_port

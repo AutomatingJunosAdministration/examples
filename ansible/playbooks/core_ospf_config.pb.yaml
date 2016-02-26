@@ -1,0 +1,6 @@
+---
+- name: Generate and apply core OSPF config
+  hosts: junos-all
+  roles:
+  - login_facts_and_dynamic_groups
+  - generate_core_ospf_config

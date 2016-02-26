@@ -1,0 +1,22 @@
+---
+- name: Check for NETCONF login
+  fail:
+    msg: "Ensure NETCONF login is configured before configuring core OSPF."
+  when: (jlogin.console is defined) and
+        jlogin.console
+
+- name: Make sure files dir exists
+  file:
+    path: "{{ files_dir }}"
+    state: directory
+
+- name: Make sure log dir exists
+  file:
+    path: "{{ files_dir }}/log"
+    state: directory
+
+- name: Building core OSPF configuration
+  template:
+    src: core_ospf_config.j2
+    dest: "{{ files_dir }}/core_ospf_config.xml"
+  notify: Install core OSPF config

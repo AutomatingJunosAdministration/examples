@@ -1,0 +1,24 @@
+---
+- name: Pausing {{ pause }} seconds to let second login prompt recover...
+  command: /bin/sleep {{ pause }}
+  when: pause is defined and pause and
+        (not jfacts) and
+        netconf|failed
+
+- name: Facts via console
+  junos_get_facts:
+    host: "{{ inventory_hostname }}"
+    console: "--telnet={{ jaccess.console_ts }},{{ jaccess.console_port }}"
+    user: "{{ user | default(omit) }}"
+    passwd: "{{ passwd | default(omit) }}"
+    savedir: "{{ role_path }}/files"
+  register: j
+  ignore_errors: True
+  when: (not jfacts) and
+        netconf|failed
+
+- include: set_jlogin_and_jfacts.yaml
+  vars:
+    user_var: "{{ user | default('') }}"
+    passwd_var: "{{ passwd | default('') }}"
+    console_var: "--telnet={{ jaccess.console_ts }},{{ jaccess.console_port }}"

@@ -1,0 +1,9 @@
+---
+jcfg:
+  timezone: America/Los_Angeles
+  dns_resolvers:
+    - 8.8.8.8
+    - 8.8.4.4
+  ntp_servers:
+    - 209.244.0.5
+    - 209.244.0.6

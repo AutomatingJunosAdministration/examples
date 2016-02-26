@@ -1,0 +1,9 @@
+---
+jaccess:
+  console_ts: ts3.lab
+  console_port: 15006
+  netconf_port: 22
+
+jcfg:
+  mgmt_ip: 10.102.241.119/20
+  mgmt_gw: 10.102.255.254

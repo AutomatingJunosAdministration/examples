@@ -1,0 +1,32 @@
+---
+- name: Set hash_dir fact
+  set_fact:
+    hash_dir: "{{ role_path }}/files/{{ inventory_hostname }}"
+
+- name: Make sure hash dir exists
+  file:
+    path: "{{ hash_dir }}"
+    state: directory
+
+- name: Create/touch the hash file
+  file:
+    path: "{{ hash_dir}}/{{ user }}_hash"
+    state: touch
+
+- name: Read hash file into the jhash fact
+  set_fact:
+    jhash: "{{ lookup('file', hash_dir + '/' + user + '_hash') }}"
+
+- name: Write new hash file
+  copy:
+    content: "{{ pw |password_hash('md5') }}"
+    dest: "{{ hash_dir }}/{{ user }}_hash"
+  register: new_hash_file
+  when: jhash is undefined or jhash == ""
+
+- name: Rewrite hash file
+  copy:
+    content: "{{ pw |password_hash('md5',
+              jhash |regex_replace('^\\$1\\$(.*)\\$.*$', '\\\\1')) }}"
+    dest: "{{ hash_dir }}/{{ user }}_hash"
+  when: new_hash_file.skipped is defined and new_hash_file.skipped

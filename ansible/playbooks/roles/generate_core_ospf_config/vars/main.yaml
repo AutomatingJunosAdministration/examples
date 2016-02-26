@@ -1,0 +1,2 @@
+---
+files_dir: "{{ role_path }}/files/{{ inventory_hostname }}"

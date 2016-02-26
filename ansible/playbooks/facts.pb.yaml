@@ -1,0 +1,13 @@
+---
+- name: Get facts from core1.site1 Junos router
+  hosts: core1.site1
+  connection: local
+  gather_facts: no
+  roles:
+    - Juniper.junos
+  tasks:
+    - name: Get Junos Facts
+      junos_get_facts:
+        host: "{{ inventory_hostname }}"
+        user: user
+        passwd: user123

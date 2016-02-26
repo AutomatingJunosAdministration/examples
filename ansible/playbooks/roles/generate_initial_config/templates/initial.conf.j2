@@ -1,0 +1,61 @@
+system {
+    host-name {{ inventory_hostname }};
+    domain-name {{ jcfg.domain }};
+    backup-router {{ jcfg.mgmt_gw }};
+    time-zone {{ jcfg.timezone }};
+    root-authentication {
+        encrypted-password "{{ root_hash }}";
+    }
+    name-server {
+    {% for name_server in jcfg.dns_resolvers %}
+        {{ name_server }};
+    {% endfor %}
+    }
+    login {
+        user {{ jaccess.netconf_user }} {
+            class super-user;
+            authentication {
+                encrypted-password "{{ netconf_user_hash }}";
+                ssh-dsa "{{ ssh_key }}";
+            }
+        }
+    }
+    services {
+        ssh;
+        netconf {
+            ssh;
+        }
+    }
+    syslog {
+        user * {
+            any emergency;              
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+    ntp {
+        boot-server {{ jcfg.ntp_servers[0] }};
+    {% for ntp_server in jcfg.ntp_servers %}
+        server {{ ntp_server }};
+    {% endfor %}
+    }
+}
+interfaces {
+    {{ jcfg.mgmt_int }} {
+        unit 0 {
+            family inet {
+                address {{ jcfg.mgmt_ip }};
+            }
+        }
+    }
+}
+routing-options {
+    static {
+        route 0.0.0.0/0 next-hop {{ jcfg.mgmt_gw }};
+    }                                   
+}

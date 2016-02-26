@@ -1,0 +1,23 @@
+---
+- name: Make sure files dir exists
+  file:
+    path: "{{ files_dir }}"
+    state: directory
+
+- name: Make sure log dir exists
+  file:
+    path: "{{ files_dir }}/log"
+    state: directory
+
+- name: Building initial configuration
+  template:
+    src: initial.conf.j2
+    dest: "{{ files_dir }}/initial.conf"
+  notify: Install initial config
+
+- name: Currently in factory default mode
+  command: /bin/true
+  notify: Install initial config
+  when: ((jlogin.user is defined) and (jlogin.user == "root")) and
+        ((jlogin.passwd is not defined) or (not jlogin.passwd)) and
+        ((jlogin.console is defined) and (jlogin.console))

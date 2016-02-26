@@ -1,0 +1,8 @@
+---
+jaccess:
+  console_ts: ts2.lab
+  console_port: 15006
+
+jcfg:
+  mgmt_ip: 10.102.241.120/20
+  mgmt_gw: 10.102.255.254

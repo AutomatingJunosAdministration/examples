@@ -1,0 +1,29 @@
+<configuration>
+        <protocols>
+            <ospf replace="replace">
+                {% if jcfg.ospf is defined %}
+                    <traffic-engineering/>
+                    <area>
+                        <name>0.0.0.0</name>
+                        <interface>
+                            <name>lo0.0</name>
+                            <passive>
+                            </passive>
+                        </interface>
+                    </area>
+                    {% for area_list in  jcfg.ospf.areas %}
+                        {% for area, ints in  area_list.iteritems() %}
+                            <area>
+                                <name>{{ area }}</name>
+                                {% for int in ints %}
+                                    <interface>
+                                        <name>{{ int }}</name>
+                                    </interface>
+                                {% endfor %}
+                            </area>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            </ospf>
+        </protocols>
+</configuration>

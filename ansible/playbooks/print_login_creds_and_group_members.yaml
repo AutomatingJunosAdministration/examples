@@ -1,0 +1,16 @@
+---
+- name: Gather login info and facts. Create groups
+  hosts: junos-all
+  roles:
+    - login_facts_and_dynamic_groups
+  tasks:
+  - name: Print jlogin
+    debug:
+      var=jlogin
+
+- name: Print groups
+  hosts: h0
+  tasks:
+  - name: Print groups
+    debug:
+      var=groups

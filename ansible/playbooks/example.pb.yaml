@@ -1,0 +1,38 @@
+---
+- name: Play 1
+  hosts: junos-core-site1
+  connection: local
+  gather_facts: no
+  roles:
+    - Juniper.junos
+  tasks:
+    - name: Task 1
+      command: /bin/true
+      notify:
+        - Handler 2
+        - Handler 1
+    - name: Task 2
+      command: /bin/true
+    - name: Task 3
+      command: /bin/true
+      notify: Handler 2
+  handlers:
+    - name: Handler 1
+      command: /bin/true
+      failed_when: "'core2.site1' in inventory_hostname"
+    - name: Handler 2
+      command: /bin/true
+
+- name: Play 2
+  hosts: junos-core-site1
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Task 4
+      command: /bin/true
+      changed_when: False
+    - name: Task 5
+      command: /bin/true
+  handlers:
+    - name: Handler 3
+      command: /bin/true

@@ -1,0 +1,28 @@
+---
+- name: Example Play With Conditional Tasks
+  hosts: junos-core-site1
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Execute Some Command
+      command: /bin/false
+      register: result
+      changed_when: result|failed
+      ignore_errors: True
+      when: inventory_hostname == "core1.site1"
+    - name: Print success
+      debug:
+          msg: "Some command succeeded."
+      when: result|success
+    - name: Print failure
+      debug:
+          msg: "Some command failed."
+      when: result|failed
+    - name: Print skipped
+      debug:
+          msg: "Some command was skipped."
+      when: result|skipped
+    - name: Print changed
+      debug:
+          msg: "Some command changed something."
+      when: result|changed

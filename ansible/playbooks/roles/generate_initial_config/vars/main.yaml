@@ -1,0 +1,6 @@
+---
+root_hash: "{{ lookup('file', hash_dir + '/' + 'root_hash') }}"
+netconf_user_hash:
+  "{{ lookup('file', hash_dir + '/' + jaccess.netconf_user + '_hash') }}"
+ssh_key: "{{ lookup('file', jaccess.ssh_key_file) }}"
+files_dir: "{{ role_path }}/files/{{ inventory_hostname }}"

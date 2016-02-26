@@ -1,0 +1,16 @@
+---
+jaccess:
+  console_ts: ts4.lab
+  console_port: 23
+
+jcfg:
+  mgmt_ip: 10.92.228.83/23
+  mgmt_gw: 10.92.229.254
+  ospf:
+    areas:
+      - 0.0.0.0:
+        - xe-0/0/1.0
+        - xe-0/0/2.0
+      - 0.0.0.42:
+        - xe-2/0/1.0
+        - xe-2/0/2.0

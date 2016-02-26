@@ -1,0 +1,8 @@
+---
+jaccess:
+  console_ts: ts1.site1
+  console_port: 15442
+
+jcfg:
+  mgmt_ip: 10.102.164.30/19
+  mgmt_gw: 10.102.191.254

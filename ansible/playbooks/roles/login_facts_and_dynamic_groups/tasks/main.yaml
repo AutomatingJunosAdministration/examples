@@ -1,0 +1,60 @@
+---
+- name: Resetting jlogin and jfacts
+  set_fact:
+    jlogin: false
+    jfacts: false
+
+- name: Checking NETCONF connectivity
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: "{{ jaccess.netconf_port | default(830) }}"
+    timeout: 3
+  register: netconf
+  ignore_errors: True
+
+- include: netconf_facts.yaml
+  vars:
+    user: "{{ jaccess.netconf_user }}"
+
+- include: netconf_facts.yaml
+  vars:
+    user: "{{ jaccess.netconf_user }}"
+    passwd: "{{ jaccess.netconf_password }}"
+
+- include: netconf_facts.yaml
+  vars:
+    user: "root"
+    passwd: "{{ jaccess.root_password }}"
+
+- include: console_facts.yaml
+  vars:
+    user: "root"
+    pause: 0
+
+- include: console_facts.yaml
+  vars:
+    user: "root"
+    passwd: "{{ jaccess.root_password }}"
+    pause: 15
+
+- include: console_facts.yaml
+  vars:
+    user: "{{ jaccess.netconf_user }}"
+    passwd: "{{ jaccess.netconf_password }}"
+    pause: 15
+
+- fail:
+    msg: "Unable to successfully log in."
+  when: not jfacts
+
+- name: Creating junos-version-* groups
+  group_by:
+    key="junos-version-{{ jfacts.version }}"
+
+- name: Creating junos-model-* groups
+  group_by:
+    key="junos-model-{{ jfacts.model }}"
+
+- name: Creating junos-platform-* groups
+  group_by:
+    key="junos-platform-{{ jfacts.model | regex_replace('\-|\d.*$','') }}"

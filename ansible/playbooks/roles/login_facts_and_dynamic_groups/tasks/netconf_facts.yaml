@@ -1,0 +1,17 @@
+---
+- name: Facts via NETCONF
+  junos_get_facts:
+    host: "{{ inventory_hostname }}"
+    port: "{{ jaccess.netconf_port | default(omit) }}"
+    user: "{{ user | default(omit) }}"
+    passwd: "{{ passwd | default(omit) }}"
+    savedir: "{{ role_path }}/files"
+  register: j
+  ignore_errors: True
+  when: (not jfacts) and
+        netconf|success
+
+- include: set_jlogin_and_jfacts.yaml
+  vars:
+    user_var: "{{ user | default('') }}"
+    passwd_var: "{{ passwd | default('') }}"

@@ -1,0 +1,21 @@
+---
+- name: Zeroize Junos Devices
+  hosts: junos-all
+  roles:
+  - login_facts_and_dynamic_groups
+  - zeroize
+- name: Check the login
+  hosts: junos-all
+  pre_tasks:
+    - name: Waiting {{ wait_time | default(15) }} min. for zeroize to complete
+      pause:
+        minutes: "{{ wait_time | default(15) }}"
+  roles:
+  - login_facts_and_dynamic_groups
+  tasks:
+    - fail:
+        msg: "Not in factory default state, or not reachable on console"
+      when: (jlogin is undefined) or
+            (jlogin.user is undefined) or (jlogin.user != "root") or
+            (jlogin.console is undefined) or (not jlogin.console) or
+            ((jlogin.passwd is defined) and (jlogin.passwd))

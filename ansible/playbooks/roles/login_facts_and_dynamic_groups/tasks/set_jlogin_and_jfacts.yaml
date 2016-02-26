@@ -1,0 +1,8 @@
+---
+- set_fact:
+    jlogin:
+      user: "{{ user_var | default('') }}"
+      passwd: "{{ passwd_var | default('') }}"
+      console: "{{ console_var | default('') }}"
+    jfacts: "{{ j.facts }}"
+  when: j.facts is defined

@@ -1,0 +1,9 @@
+---
+jcfg:
+  timezone: America/New_York
+  dns_resolvers:
+    - 209.244.0.3
+    - 209.244.0.4
+  ntp_servers:
+    - 104.209.134.106
+    - 17.253.14.253

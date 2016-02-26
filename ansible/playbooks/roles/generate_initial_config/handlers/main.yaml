@@ -1,0 +1,11 @@
+---
+- name: Install initial config
+  junos_install_config:
+    host: "{{ inventory_hostname }}"
+    port: "{{ jlogin.port | default(omit,true) }}"
+    user: "{{ jlogin.user | default(omit,true) }}"
+    passwd: "{{ jlogin.passwd | default(omit,true) }}"
+    console: "{{ jlogin.console | default(omit,true) }}"
+    file: "{{ files_dir }}/initial.conf"
+    overwrite: yes
+    logfile: "{{ files_dir }}/log/changes.log"

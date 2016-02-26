@@ -1,0 +1,8 @@
+---
+jcfg:
+  timezone: America/Denver
+  dns_resolvers:
+    - 8.8.8.8
+    - 8.8.4.4
+  ntp_servers:
+    - 128.138.141.172

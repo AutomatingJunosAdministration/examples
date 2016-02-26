@@ -1,0 +1,28 @@
+---
+- name: Generate initial config
+  hosts: junos-all
+  roles:
+  - login_facts_and_dynamic_groups
+  - role: generate_hash
+    user: 'root'
+    pw: "{{ jaccess.root_password }}"
+  - role: generate_hash
+    user: "{{ jaccess.netconf_user }}"
+    pw: "{{ jaccess.netconf_password }}"
+  - generate_initial_config
+- name: Check the login
+  hosts: junos-all
+  pre_tasks:
+  - name: Wait {{ netconf_timeout | default(60) }} sec for NETCONF reachability
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ jaccess.netconf_port | default(830) }}"
+      timeout: "{{ netconf_timeout | default(60) }}" 
+  roles:
+  - login_facts_and_dynamic_groups
+  tasks:
+    - fail:
+        msg: "Unable to login via NETCONF"
+      when: (jlogin.console is defined) or
+            (jlogin.user is undefined) or
+            (not jlogin.user)

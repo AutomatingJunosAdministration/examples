@@ -1,0 +1,15 @@
+---
+- name: Make sure log dir exists
+  file:
+    path: "{{ log_dir }}"
+    state: directory
+
+- name: Zeroize
+  junos_zeroize:
+    host: "{{ inventory_hostname }}"
+    port: "{{ jlogin.port | default(omit,true) }}"
+    user: "{{ jlogin.user | default(omit,true) }}"
+    passwd: "{{ jlogin.passwd | default(omit,true) }}"
+    console: "{{ jlogin.console | default(omit,true) }}"
+    zeroize: 'zeroize'
+    logfile: "{{ log_dir }}/changes.log"

@@ -1,0 +1,11 @@
+---
+- name: Install core OSPF config
+  junos_install_config:
+    host: "{{ inventory_hostname }}"
+    port: "{{ jlogin.port | default(omit,true) }}"
+    user: "{{ jlogin.user | default(omit,true) }}"
+    passwd: "{{ jlogin.passwd | default(omit,true) }}"
+    timeout: "{{ jaccess.commit_timeout | default(omit,true) }}"
+    replace: true
+    file: "{{ files_dir }}/core_ospf_config.xml"
+    logfile: "{{ files_dir }}/log/changes.log"

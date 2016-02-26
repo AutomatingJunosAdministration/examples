@@ -1,0 +1,13 @@
+---
+- name: Example Play With A Loop
+  hosts: core1.site1
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Generating individual user configs
+      template:
+        src: "/tmp/templates/user.conf.j2"
+        dest: "/tmp/configs/users/{{ item }}.conf"
+      with_items:
+        - jonathan
+        - stacy

@@ -1,0 +1,9 @@
+---
+ansible_connection: local
+jaccess:
+  ssh_key_file: "~/.ssh/id_dsa.pub"
+  netconf_user: user
+  netconf_password: "{{ jvault.netconf_password }}"
+  root_password: "{{ jvault.root_password }}"
+jcfg:
+  domain: example.com

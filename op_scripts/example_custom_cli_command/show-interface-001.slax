@@ -1,0 +1,53 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+param $ip; 
+param $routing-instance = "default";
+
+var $arguments = { 
+    <argument> {
+        <name> "ip";
+        <description> "The remote IP address.";
+    }
+    <argument> {
+        <name> "routing-instance";
+        <description> "The routing instance (optional; defaults to the " _
+                      "default routing instance).";
+    }
+}
+
+match / {
+    <op-script-results> { 
+        /* Connect to mgd. */
+        var $con = jcs:open();
+
+        /* Find the interface. */
+        var $interface = { 
+            call find-intf($con=$con);
+        }
+
+        /* Print the interface. */
+        <output> "Found: " _ $interface;
+
+        /* Close the connection to mgd. */
+        expr jcs:close($con);
+    }
+}
+
+template find-intf($con) { 
+    var $get-route-rpc = {
+        <get-forwarding-table-information> {
+            <table> $routing-instance;
+            <destination> $ip;
+        }
+    }
+    var $route-info = jcs:execute($con, $get-route-rpc);
+
+    expr $route-info/route-table/rt-entry[destination-type = "dest" ||
+        destination-type = "intf" || destination-type = "ifdn"]/nh/via;
+}

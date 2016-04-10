@@ -1,0 +1,76 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+template emit-error($message, $dot=.) {
+    /* Get the [edit] path. */
+    var $path := {
+        call jcs:edit-path($dot=$dot);
+    }
+
+    /* Emit the error. */
+    <xnm:error> {
+        copy-of $path;
+        <message> $message;
+    }
+
+    /* Log the syslog message. */
+    <syslog> {
+        <message> jcs:printf("%s: %s", $path/edit-path, $message);
+    }
+}
+
+template check-neighbor-policies($type) {
+    /*
+     * For the type of policy, determine whether the policy
+     * chain is at the current (neighbor), parent (group), or
+     * parent's parent (BGP global) level.
+     *
+     * Then, determine the last policy in the policy chain at
+     * that level.
+     */
+    var $last-policy = {
+        if (*[name() == $type]) {
+            expr *[name() == $type][last()];
+        }
+        else if (../*[name() == $type]) {
+            expr ../*[name() == $type][last()];
+        }
+        else {
+            expr ../../*[name() == $type][last()];
+        }
+    }
+    if ($last-policy == "") {
+        call emit-error($message=$type _ " policy required, but not defined");
+    }
+    else if ($last-policy != "deny-all") {
+        call emit-error {
+            with $message = {
+                expr jcs:printf("%s policy error: last policy should be " _
+                                "'deny-all', but found '%s' instead",
+                                $type, $last-policy);
+            }
+        }
+    }
+}
+    
+match configuration/protocols/bgp/group {
+    if (name == "internal") {
+        /* This is acceptable. */
+    }
+    else if (name == "peers" || name == "customers") {
+        /* This is acceptable. */
+        for-each (neighbor) {
+            /* Check each neighbor's policies. */
+            call check-neighbor-policies($type="import");
+            call check-neighbor-policies($type="export");
+        }
+    }
+    else {
+        call emit-error($message=jcs:printf("Group %s is not allowed", name));
+    }
+}

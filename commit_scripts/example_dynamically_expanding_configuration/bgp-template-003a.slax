@@ -1,0 +1,139 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+template emit-error($message, $dot=.) {
+    /* Get the [edit] path. */
+    var $path := {
+        call jcs:edit-path($dot=$dot);
+    }
+
+    /* Emit the error. */
+    <xnm:error> {
+        copy-of $path;
+        <message> $message;
+    }
+
+    /* Log the syslog message. */
+    <syslog> {
+        <message> jcs:printf("%s: %s", $path/edit-path, $message);
+    }
+}
+
+
+template get-remote-ip($local-address) {
+    var $pattern = "([0-9]+\.[0-9]+\.[0-9]+\.)([0-9]+)/";
+    var $ip-split = slax:regex($pattern, $local-address);
+    if (string($ip-split[1]) != "") {
+        expr jcs:printf("%s%d", $ip-split[2], number($ip-split[3]) + 1);
+    }
+}
+
+template emit-bgp-config($peer-ip, $peer-as, $route-type, $prefix-limit) {
+    <protocols> {
+        <bgp> {
+            <group> {
+                <name> "customers";
+                <neighbor> {
+                    <name> $peer-ip;
+                    <import> "filter-customer-generic";
+                    <import> "prefix-size";
+                    <import> "handle-communities";
+                    <import> "as-" _ $peer-as;
+                    <import> "deny-all";
+                    <family> {
+                        <inet> {
+                            <unicast> {
+                                <accepted-prefix-limit> {
+                                    <maximum> $prefix-limit;
+                                    <teardown> {
+                                        <limit-threshold> "80";
+                                        <idle-timeout> {
+                                            <timeout> "10";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        <inet6> {
+                            <unicast> {
+                                <accepted-prefix-limit> {
+                                    <maximum> $prefix-limit;
+                                    <teardown> {
+                                        <limit-threshold> "80";
+                                        <idle-timeout> {
+                                            <timeout> "10";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    <export> $route-type;
+                    <export> "deny-all";
+                    <peer-as> $peer-as;
+                }
+            }
+        }
+    }
+}
+
+match configuration/interfaces/interface/unit/family/inet/address
+                                        [apply-macro[name=="bgp"]] {
+    var $peer_as = apply-macro[name=="bgp"]/data[name="peer_as"]/value;
+    var $route_type = apply-macro[name=="bgp"]/data[name="route_type"]/value;
+    var $prefix_limit = {
+        if (apply-macro[name=="bgp"]/data[name="prefix_limit"]) {
+            number(apply-macro[name=="bgp"]/data[name="prefix_limit"]/value);
+        }
+        else {
+            number("10000");
+        }
+    }
+    var $peer-ip = { 
+        call get-remote-ip($local-address=name);
+    }
+
+    if (not($peer_as) || string-length($peer_as) == 0) {
+        call emit-error {
+            with $dot = apply-macro[name=="bgp"];
+            with $message = "Required 'peer_as' element is missing or " _
+                            "empty";
+        }
+    }
+    else if (not($route_type) || string-length($route_type) == 0) {
+        call emit-error {
+            with $dot = apply-macro[name=="bgp"];
+            with $message = "Required 'route_type' element is missing or " _
+                            "empty";
+        }
+    }
+    else if (not($prefix_limit) || string($prefix_limit) == "NaN" ||
+             $prefix_limit < 1 || $prefix_limit > 10000000) {
+        call emit-error {
+            with $dot = apply-macro[name=="bgp"];
+            with $message = "Optional 'prefix_limit' element appears to " _
+                            "be malformed (expected a number between " _
+                            "1 and 10000000";
+        }
+    }
+    else {
+        var $top-level = ../../../../../..;
+        call jcs:emit-change {
+            with $tag = "transient-change";
+            with $dot = $top-level;
+            with $content = {
+                call emit-bgp-config {
+                    with $peer-ip = $peer-ip;
+                    with $peer-as = $peer-as;
+                    with $route-type = $route-type;
+                    with $prefix-limit = $prefix-limit;
+                }
+            }
+        }
+    }
+}

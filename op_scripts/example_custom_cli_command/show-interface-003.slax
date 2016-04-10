@@ -1,0 +1,96 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+param $ip;
+param $routing-instance = "default";
+
+var $arguments = {
+    <argument> {
+        <name> "ip";
+        <description> "The remote IP address.";
+    }
+    <argument> {
+        <name> "routing-instance";
+        <description> "The routing instance (optional; defaults to the " _
+                      "default routing instance).";
+    }
+}
+
+match / {
+    <op-script-results> {
+        /*
+         * Check the arguments. The key requirement is that the "ip" argument
+         * exist and be nonempty.
+         */
+        if (not($ip)) {
+            <xnm:error> {
+                <message> "Missing required argument 'ip'.";
+            }
+        }
+        else {
+            /* Connect to mgd. */
+            var $con = jcs:open();
+
+            if (not($con)) {
+                <xnm:error> {
+                    <message> "Unable to connect to local mgd.";
+                }
+            }
+            else {
+                /* Find the interface. */
+                var $interface := {
+                    call find-intf($con=$con);
+                }
+
+                if ($interface//xnm:error) {
+                    copy-of $interface;
+                }
+                else if ($interface/interface = "") {
+                    <xnm:error> {
+                        <message> "Unable to determine output interface for " _
+                            $ip;
+                    }
+                }
+                else {
+                    var $get-interface-info-rpc = {
+                        <get-interface-information> {
+                            <extensive>;
+                            <interface-name> $interface/interface;
+                        }
+                    }
+                    copy-of jcs:execute($con, $get-interface-info-rpc); 
+                }
+
+                /* Close the connection to mgd. */
+                expr jcs:close($con);
+            }
+        }
+    }
+}
+
+template find-intf($con) {
+    var $get-route-rpc = {
+        <get-forwarding-table-information> {
+            <table> $routing-instance;
+            <destination> $ip;
+        }
+    }
+    var $route-info = jcs:execute($con, $get-route-rpc);
+
+    if ($route-info//xnm:error) {
+        <output> "Error determining interface IP address:";
+        copy-of $route-info;
+    }
+    else {
+        var $ifl = $route-info/route-table/rt-entry[destination-type = "dest" ||
+            destination-type = "intf" || destination-type = "ifdn"]/nh/via;
+
+        var $if-split = jcs:split("(\\.)", $ifl); 
+        <interface> $if-split[1];
+    }
+}

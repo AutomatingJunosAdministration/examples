@@ -1,0 +1,119 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+var $self = "lacp.slax"; 
+var $logprefix = $self _ ": ";
+var $debug = false();
+
+match / {
+    <event-script-results> {
+        var $event_id = event-script-input/trigger-event/id; 
+        var $interface = event-script-input/trigger-event/attribute-list/
+            attribute[name == "error-message"]/value;
+
+        if ($event_id && $event_id != "LACPD_TIMEOUT") { 
+            expr jcs:syslog("user.info", $logprefix,
+                            "called for unexpected event ", $event_id);
+        }
+        else if (not($event_id) || not($interface)) { 
+            expr jcs:syslog("user.info", $logprefix,
+                            "called with unexpected input document ",
+                            "(unable to find expected elements)");
+        }
+        else { 
+            if ($debug) { 
+                expr jcs:syslog("user.debug", $logprefix, "found: ",
+                                "$event_id=", $event_id,
+                                ", $interface=", $interface);
+            }
+
+            call check_disable_interface($interface); 
+        }
+    }
+}
+
+/*
+ * Check to see if the interface should be disabled. If so, do it.
+ */
+template check_disable_interface($interface) {
+    var $get_conf_rpc = { 
+        <get-configuration database="committed" inherit="inherit"> {
+            <configuration> {
+                <interfaces> {
+                    <interface> {
+                        <name> $interface;
+                    }
+                }
+            }
+        }
+    }
+
+    var $config = jcs:invoke($get_conf_rpc); 
+    var $disable_val = $config/interfaces/interface[name = $interface]/
+        apply-macro[name = $self]/data[name = "auto-disable"]/value; 
+
+    var $pattern = "^(([Tt][Rr][Uu][Ee])|([Yy][Ee][Ss]))$";
+    var $match_result = jcs:regex($pattern, $disable_val); 
+    if (string-length($match_result[1]) > 0) {
+        call disable_interface($interface); 
+    }
+    else if ($debug) {
+        expr jcs:syslog("user.debug", $logprefix,
+                        "ignoring event for interface ",
+                        $interface, " due to apply-macro ", $self,
+                        " configuration"); 
+    }
+}
+
+/*
+ * Disable the interface
+ */
+template disable_interface($interface) {
+    var $config-results := { 
+        var $con = jcs:open();
+        if (not($con)) { 
+            <xnm:error> {
+                <message> "Unable to connect to local mgd.";
+            }
+        }
+        else { 
+            call jcs:load-configuration {
+                with $connection = $con;
+                with $configuration = {
+                    <configuration> {
+                        <interfaces> {
+                            <interface> {
+                                <name> $interface;
+                                <disable>;
+                            }
+                        }
+                    }
+                }
+                with $commit-options = {
+                    <commit-options> {
+                        <log> "interace " _ $interface _
+                              " disabled by event-script (" _ $self _
+                              ") due to LACP flaps";
+                    }
+                }
+            }
+            expr jcs:close($con);
+        }
+    }
+
+    if ($config-results//xnm:error) { 
+        expr jcs:syslog("user.error", $logprefix,
+                        "error making configuration change for interface ",
+                        $interface, ": ", $config-results//xnm:error/message);
+    }
+    else { 
+        expr jcs:syslog("user.info", $logprefix, "interface ", $interface,
+                        " disabled by ", $self, " due to LACP flaps - ",
+                        "please enable it manually once the link is stable");
+    }
+}

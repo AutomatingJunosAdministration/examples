@@ -1,0 +1,34 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+template emit-error($message, $dot=.) {
+    /* Get the [edit] path. */
+    var $path := {
+        call jcs:edit-path($dot=$dot);
+    }
+
+    /* Emit the error. */
+    <xnm:error> {
+        copy-of $path;
+        <message> $message;
+    }
+
+    /* Log the syslog message. */
+    <syslog> {
+        <message> jcs:printf("%s: %s", $path/edit-path, $message);
+    }
+}
+
+match configuration/protocols/bgp/group {
+    if (name == "internal" || name == "peers" || name == "customers") {
+        /* This is acceptable. */
+    }
+    else {
+        call emit-error($message=jcs:printf("Group %s is not allowed", name));
+    }
+}

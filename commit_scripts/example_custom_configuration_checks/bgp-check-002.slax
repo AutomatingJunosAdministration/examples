@@ -1,0 +1,54 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+template emit-error($message, $dot=.) {
+    /* Get the [edit] path. */
+    var $path := {
+        call jcs:edit-path($dot=$dot);
+    }
+
+    /* Emit the error. */
+    <xnm:error> {
+        copy-of $path;
+        <message> $message;
+    }
+
+    /* Log the syslog message. */
+    <syslog> {
+        <message> jcs:printf("%s: %s", $path/edit-path, $message);
+    }
+}
+
+template check-neighbor-policies($type) {
+    /*
+     * Make sure the type of policy exists at either the
+     * current (neighbor), parent (group), or parent's parent
+     * (BGP global) level.
+     */
+    if (not(*[name() == $type] || ../*[name() == $type] ||
+            ../../*[name() == $type])) {
+        call emit-error($message=$type _ " policy required, but not defined");
+    }
+}
+    
+match configuration/protocols/bgp/group {
+    if (name == "internal") {
+        /* This is acceptable. */
+    }
+    else if (name == "peers" || name == "customers") {
+        /* This is acceptable. */
+        for-each (neighbor) {
+            /* Check each neighbor's policies. */
+            call check-neighbor-policies($type="import");
+            call check-neighbor-policies($type="export");
+        }
+    }
+    else {
+        call emit-error($message=jcs:printf("Group %s is not allowed", name));
+    }
+}

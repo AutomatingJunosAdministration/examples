@@ -1,0 +1,30 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+/*
+ * Note: This is a script with an error that is used to demonstrate
+ * the SLAX debugger in chapter 6 of "Automating Junos Administration".
+ *
+ * As you follow the example in the book, you should be able to find and
+ * correct the error.
+ */
+
+template get_version_info() {
+    var $ver = jcs:invoke("get-software-information");
+    copy-of $ver;
+}
+
+match / {
+    <op-script-results> {
+        var $version_info = {
+            call get_version_info();
+        }
+        var $outstring = "The Junos version is: " _ $version_info/junos-version;
+        <output> $outstring;
+    }
+}

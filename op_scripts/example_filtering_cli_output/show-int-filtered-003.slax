@@ -1,0 +1,51 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+template handle-physical-intf($family) {
+    copy-node { 
+        for-each (@*) {
+            attribute name(.) {
+                expr .;
+            }
+        }
+        for-each (*[name() != "logical-interface"]) { 
+            copy-of .;
+        }
+        for-each (logical-interface[address-family[
+                  address-family-name=$family]]) { 
+            copy-of .;
+        }
+    }
+}
+
+match / {
+    <op-script-results> {
+        var $con = jcs:open();
+        var $rpc-query = {
+            <get-interface-information> {
+                <terse>;
+            }
+        }
+        var $results = jcs:execute($con, $rpc-query);
+        expr jcs:close($con);
+
+        for-each ($results) {
+            copy-node {
+                for-each (@*) {
+                    attribute name(.) {
+                        expr .;
+                    }
+                }
+                for-each (physical-interface[logical-interface/
+                          address-family[address-family-name="inet6"]]) {
+                    call handle-physical-intf($family="inet6"); 
+                }
+            }
+        }
+    }
+}

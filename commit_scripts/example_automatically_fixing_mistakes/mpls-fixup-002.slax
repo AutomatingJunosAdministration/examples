@@ -1,0 +1,30 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+match configuration {
+    var $mpls = protocols/mpls;
+    for-each (interfaces/interface/unit[not(family/mpls)]) {
+        /* Calculate the IFL name. */
+        var $intname = ../name _ "." _ name;
+
+        /*
+         * Determine if the interface is configured under
+         * protocols/mpls. The interface is "configured" if:
+         * 1. "interface all" is configured (and not disabled), or
+         *    "interface $intname" is configured.
+         * and
+         * 2. "interface $intname" is not disabled.
+         */
+         if (($mpls/interface[name == "all" && not(disable)] ||
+              $mpls/interface[name == $intname]) &&
+             not($mpls/interface[name == $intname]/disable)) {
+
+             /* Do configuration change here. */
+         }
+    }
+}

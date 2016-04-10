@@ -1,0 +1,23 @@
+version 1.1;
+
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+
+import "../import/junos.xsl";
+
+param $string;
+
+match / {
+    <op-script-output> {
+        var $userstring = {
+            if ($string) {
+                expr $string;
+            }
+            else {
+                expr jcs:get-input("Enter a string: ");
+            }
+        }
+        <output> jcs:printf("The user string was: \"%s\".", $userstring);
+    }
+}

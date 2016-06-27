@@ -1,0 +1,15 @@
+system {
+    extensions {
+        providers {
+            juniper {
+                license-type juniper deployment-scope commercial;
+            }
+        }
+    }
+    login {
+        user <%= @id %> {
+            class super-user;
+            shell csh;
+        }
+    }
+}

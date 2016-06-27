@@ -1,0 +1,8 @@
+# Source: /etc/puppet/modules/junos_templates/templates/puppet_agent_conf.erb
+[main]
+    pluginsync = true
+
+[agent]
+    <%# @servername gets the $servername fact %>
+    server = <%= @servername %>
+    daemonize = false
